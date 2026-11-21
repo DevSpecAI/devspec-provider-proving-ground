@@ -37,7 +37,11 @@ const server = http.createServer(async (req, res) => {
   if (url.pathname.startsWith("/control/")) {
     if (!controlToken || req.headers["x-control-token"] !== controlToken) return json(res, 403, { ok: false });
     const body = await readBody(req);
-    if (url.pathname === "/control/outage") state.outage = body.on === true;
+    if (url.pathname === "/control/outage") {
+      state.outage = body.on === true;
+      // An outage is an error in the logs too, so it can be found there as well as in uptime.
+      if (state.outage) log("error", "maintenance switch on: /health now answers 503", { switch: "/control/outage" });
+    }
     else if (url.pathname === "/control/heartbeat") state.heartbeat = body.on !== false;
     else if (url.pathname === "/control/throw") {
       try {
