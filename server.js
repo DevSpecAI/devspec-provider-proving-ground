@@ -23,8 +23,13 @@ function readBody(req) {
   });
 }
 
-// A deliberate, recognisable crash for error tracking to group.
+// A cart with no items renders as empty instead of crashing.
 function renderCart(cart) {
+  return (cart.items ?? []).map((i) => i.id);
+}
+
+// A deliberate, recognisable crash for error tracking to group (the /control/throw switch).
+function crashOnPurpose(cart) {
   return cart.items.map((i) => i.id);
 }
 
@@ -45,7 +50,7 @@ const server = http.createServer(async (req, res) => {
     else if (url.pathname === "/control/heartbeat") state.heartbeat = body.on !== false;
     else if (url.pathname === "/control/throw") {
       try {
-        renderCart({});
+        crashOnPurpose({});
       } catch (err) {
         captureError(err, { route: "/control/throw" });
         await Sentry.flush(5000).catch(() => {});
